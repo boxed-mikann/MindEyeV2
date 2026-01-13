@@ -199,7 +199,7 @@ class AlgonautsMindEye(nn.Module):
                 dim=self.clip_emb_dim,
                 depth=6,
                 dim_head=64,
-                heads=self.clip_emb_dim // #64,
+                heads=self.clip_emb_dim #64,
                 #causal=False,
                 #num_tokens=self.clip_seq_dim,
                 #learned_query_mode="none",
