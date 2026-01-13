@@ -403,7 +403,10 @@ if __name__ == "__main__":
     print("Testing transfer_utils...")
     
     # ダミーモデルでテスト
-    from models_algonauts import AlgonautsMindEye
+    try:
+        from models_algonauts import AlgonautsMindEye
+    except ImportError:
+        from .models_algonauts import AlgonautsMindEye
     
     model = AlgonautsMindEye(
         subjects=["subj01"],

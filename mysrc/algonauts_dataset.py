@@ -354,7 +354,10 @@ if __name__ == "__main__":
         data_root = sys.argv[1]
     else:
         # デフォルトパス
-        from config import DATA_ROOT
+        try:
+            from config import DATA_ROOT
+        except ImportError:
+            from .config import DATA_ROOT
         data_root = DATA_ROOT
     
     test_dataset(data_root)

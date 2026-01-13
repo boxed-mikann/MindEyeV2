@@ -9,34 +9,64 @@ MindEyeV2 Algonauts2023 対応モジュール
     from mysrc.transfer_utils import load_pretrained_without_ridge
 """
 
-from .config import (
-    DATA_ROOT,
-    SRC_DIR,
-    CHECKPOINT_DIR,
-    OUTPUT_DIR,
-    DUMMY_MODE,
-    DEVICE,
-    get_config,
-)
+try:
+    from config import (
+        DATA_ROOT,
+        SRC_DIR,
+        CHECKPOINT_DIR,
+        OUTPUT_DIR,
+        DUMMY_MODE,
+        DEVICE,
+        get_config,
+    )
 
-from .algonauts_dataset import (
-    AlgonautsDataset,
-    SUBJECT_DIMS,
-    get_dataloader,
-    get_total_vertices,
-)
+    from algonauts_dataset import (
+        AlgonautsDataset,
+        SUBJECT_DIMS,
+        get_dataloader,
+        get_total_vertices,
+    )
 
-from .models_algonauts import (
-    AlgonautsRidge,
-    AlgonautsMindEye,
-)
+    from models_algonauts import (
+        AlgonautsRidge,
+        AlgonautsMindEye,
+    )
 
-from .transfer_utils import (
-    load_pretrained_without_ridge,
-    freeze_layers,
-    get_trainable_params,
-    count_parameters,
-)
+    from transfer_utils import (
+        load_pretrained_without_ridge,
+        freeze_layers,
+        get_trainable_params,
+        count_parameters,
+    )
+except ImportError:
+    from .config import (
+        DATA_ROOT,
+        SRC_DIR,
+        CHECKPOINT_DIR,
+        OUTPUT_DIR,
+        DUMMY_MODE,
+        DEVICE,
+        get_config,
+    )
+
+    from .algonauts_dataset import (
+        AlgonautsDataset,
+        SUBJECT_DIMS,
+        get_dataloader,
+        get_total_vertices,
+    )
+
+    from .models_algonauts import (
+        AlgonautsRidge,
+        AlgonautsMindEye,
+    )
+
+    from .transfer_utils import (
+        load_pretrained_without_ridge,
+        freeze_layers,
+        get_trainable_params,
+        count_parameters,
+    )
 
 from .dummy_models import (
     DummyCLIPImageEmbedder,

@@ -25,7 +25,10 @@ if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
 # ローカルモジュール
-from .algonauts_dataset import SUBJECT_DIMS, get_total_vertices
+try:
+    from algonauts_dataset import SUBJECT_DIMS, get_total_vertices
+except ImportError:
+    from .algonauts_dataset import SUBJECT_DIMS, get_total_vertices
 
 
 # =============================================================================
@@ -316,7 +319,11 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
     # subj01 の次元
-    from algonauts_dataset import get_total_vertices
+    try:
+        from algonauts_dataset import get_total_vertices
+    except ImportError:
+        from .algonauts_dataset import get_total_vertices
+    
     num_vertices = get_total_vertices("subj01")
     print(f"subj01 total vertices: {num_vertices}")
     
