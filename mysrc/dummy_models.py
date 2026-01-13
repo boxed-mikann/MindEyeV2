@@ -45,19 +45,17 @@ class DummyCLIPImageEmbedder(nn.Module):
         self,
         clip_emb_dim: int = 1664,
         clip_seq_dim: int = 256,
-        hidden_dim: int = 256,
+        token_dim: int = 64,
     ):
         super().__init__()
         self.clip_emb_dim = clip_emb_dim
         self.clip_seq_dim = clip_seq_dim
+        self.token_dim = token_dim
         
-        # 軽量な投影層
-        self.encoder = nn.Sequential(
-            nn.Conv2d(3, hidden_dim, kernel_size=16, stride=16),  # 224 -> 14
-            nn.GELU(),
-            nn.Flatten(2),  # (B, hidden_dim, 196)
-        )
-        self.proj = nn.Linear(hidden_dim * 196, clip_emb_dim * clip_seq_dim)
+        # 軽量なパッチ埋め込み + 共有トークン射影
+        # 224x224 を 14x14 パッチで分割 → 16x16=256 トークン
+        self.encoder = nn.Conv2d(3, token_dim, kernel_size=14, stride=14)  # (B, token_dim, 16, 16)
+        self.proj_token = nn.Linear(token_dim, clip_emb_dim)
         
         self._init_weights()
     
@@ -77,11 +75,12 @@ class DummyCLIPImageEmbedder(nn.Module):
         Returns:
             (B, 256, 1664) - CLIP トークン埋め込み
         """
-        B = x.shape[0]
-        x = self.encoder(x)  # (B, hidden_dim, 196)
-        x = x.view(B, -1)    # (B, hidden_dim * 196)
-        x = self.proj(x)     # (B, clip_emb_dim * clip_seq_dim)
-        x = x.view(B, self.clip_seq_dim, self.clip_emb_dim)  # (B, 256, 1664)
+        # パッチ埋め込み
+        x = self.encoder(x)  # (B, token_dim, 16, 16)
+        # トークン次元へ整形
+        x = x.flatten(2).transpose(1, 2)  # (B, 256, token_dim)
+        # 共有線形射影で各トークンを clip_emb_dim に拡張
+        x = self.proj_token(x)  # (B, 256, clip_emb_dim)
         return x
     
     def encode(self, x: torch.Tensor) -> torch.Tensor:

@@ -30,6 +30,7 @@ try:
     from models_algonauts import (
         AlgonautsRidge,
         AlgonautsMindEye,
+        create_algonauts_model,
     )
 
     from transfer_utils import (
@@ -37,6 +38,11 @@ try:
         freeze_layers,
         get_trainable_params,
         count_parameters,
+    )
+
+    from clip_utils import (
+        load_openclip_vitb32,
+        openclip_image_features,
     )
 except ImportError:
     from .config import (
@@ -59,6 +65,7 @@ except ImportError:
     from .models_algonauts import (
         AlgonautsRidge,
         AlgonautsMindEye,
+        create_algonauts_model,
     )
 
     from .transfer_utils import (
@@ -66,6 +73,11 @@ except ImportError:
         freeze_layers,
         get_trainable_params,
         count_parameters,
+    )
+
+    from .clip_utils import (
+        load_openclip_vitb32,
+        openclip_image_features,
     )
 
 from .dummy_models import (
@@ -86,9 +98,11 @@ __all__ = [
     # dataset
     "AlgonautsDataset", "SUBJECT_DIMS", "get_dataloader", "get_total_vertices",
     # models
-    "AlgonautsRidge", "AlgonautsMindEye",
+    "AlgonautsRidge", "AlgonautsMindEye", "create_algonauts_model",
     # transfer
     "load_pretrained_without_ridge", "freeze_layers", "get_trainable_params", "count_parameters",
+    # clip utils
+    "load_openclip_vitb32", "openclip_image_features",
     # dummy
     "DummyCLIPImageEmbedder", "DummyDiffusionEngine", "DummyVAE",
     "DummySampler", "DummyConvNeXt", "is_dummy_mode", "create_dummy_models",

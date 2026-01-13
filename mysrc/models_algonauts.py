@@ -278,6 +278,8 @@ def create_algonauts_model(
     hidden_dim: int = 1024,
     seq_len: int = 1,
     n_blocks: int = 4,
+    clip_emb_dim: int = 1664,
+    clip_seq_dim: int = 256,
     use_prior: bool = False,
     blurry_recon: bool = False,
     device: str = "cuda",
@@ -290,6 +292,8 @@ def create_algonauts_model(
         hidden_dim: 隠れ層次元
         seq_len: シーケンス長
         n_blocks: Mixerブロック数
+        clip_emb_dim: CLIP埋め込み次元
+        clip_seq_dim: CLIPシーケンス長
         use_prior: Diffusion Priorを使用するか
         blurry_recon: ぼやけ再構成を使用するか
         device: デバイス
@@ -302,6 +306,8 @@ def create_algonauts_model(
         hidden_dim=hidden_dim,
         seq_len=seq_len,
         n_blocks=n_blocks,
+        clip_emb_dim=clip_emb_dim,
+        clip_seq_dim=clip_seq_dim,
         use_prior=use_prior,
         blurry_recon=blurry_recon,
     )
