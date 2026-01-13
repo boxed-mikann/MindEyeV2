@@ -11,9 +11,30 @@ import json
 from tqdm import tqdm
 import utils
 
-from diffusers.models.vae import Decoder
+try:
+    from diffusers.models.vae import Decoder
+except ImportError:
+    from diffusers.models.autoencoders.vae import Decoder
 class BrainNetwork(nn.Module):
     def __init__(self, h=4096, in_dim=15724, out_dim=768, seq_len=2, n_blocks=4, drop=.15, clip_size=768, blurry_recon=True, clip_scale=1):
+        """
+        Initialize the model with specified architecture parameters.
+        Args:
+            h (int, optional): Hidden dimension size. Defaults to 4096.
+            in_dim (int, optional): Input dimension size. Defaults to 15724.
+            out_dim (int, optional): Output dimension size. Defaults to 768.
+            seq_len (int, optional): Sequence length. Defaults to 2.
+            n_blocks (int, optional): Number of mixer blocks. Defaults to 4.
+            drop (float, optional): Dropout rate. Defaults to 0.15.
+            clip_size (int, optional): CLIP model dimension size. Defaults to 768.
+            blurry_recon (bool, optional): Whether to enable blurry reconstruction branch. Defaults to True.
+            clip_scale (float, optional): Scaling factor for CLIP projections. Defaults to 1.
+        Returns:
+            None
+        Note:
+            When blurry_recon is True, additional decoder components are initialized including
+            upsampling layers and feature projectors for reconstruction tasks.
+        """
         super().__init__()
         self.seq_len = seq_len
         self.h = h
