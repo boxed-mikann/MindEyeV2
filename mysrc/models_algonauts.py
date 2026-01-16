@@ -188,35 +188,101 @@ class AlgonautsMindEye(nn.Module):
         if use_prior:
             self._init_prior()
     
+    # def _init_prior(self):
+    #     """Diffusion Priorを初期化"""
+    #     try:
+    #         from models import BrainDiffusionPrior
+    #         from dalle2_pytorch.train_configs import DiffusionPriorNetworkConfig
+    #         from dalle2_pytorch.dalle2_pytorch import DiffusionPriorNetwork
+            
+    #         # デフォルトのPrior設定
+    #         # prior_config = DiffusionPriorNetworkConfig(
+    #         #     dim=self.clip_emb_dim,
+    #         #     depth=6,
+    #         #     dim_head=52,  # ← 1664 / 32 = 52 (チェックポイントに合わせる)
+    #         #     heads=32,     # ← 32 heads
+    #         #     #heads=self.clip_emb_dim // 64,
+    #         #     normformer=True,
+    #         #     max_text_len=77,  # ← これを追加！CLIPのデフォルトテキスト長
+    #         #     num_timesteps=100,  # ← これも追加
+    #         #     num_image_embeds=256,  # ← これを追加！
+    #         #     #causal=False,
+    #         #     #num_tokens=self.clip_seq_dim,
+    #         #     #learned_query_mode="none",
+    #         # )
+    #         net = DiffusionPriorNetwork(
+    #             dim=self.clip_emb_dim,
+    #             depth=6,
+    #             dim_head=52,
+    #             heads=32,
+    #             normformer=True,
+    #             max_text_len=77,
+    #             num_timesteps=100,
+    #             num_image_embeds=256,
+    #         )
+            
+    #         self.diffusion_prior = BrainDiffusionPrior(
+    #             net=net,#prior_config.create(),
+    #             image_embed_dim=self.clip_emb_dim,
+    #             condition_on_text_encodings=False,
+    #             timesteps=100,
+    #             cond_drop_prob=0.2,
+    #             image_embed_scale=None,
+    #         )
+    #     except ImportError as e:
+    #         print(f"Warning: Could not initialize DiffusionPrior: {e}")
+    #         self.diffusion_prior = None
+    #     except Exception as e:
+    #         print(f"Warning: DiffusionPrior initialization failed: {e}")
+    #         self.diffusion_prior = None
     def _init_prior(self):
-        """Diffusion Priorを初期化"""
+        """Diffusion Priorを初期化（チェックポイント互換 - PriorNetworkを使用）"""
         try:
-            from models import BrainDiffusionPrior
-            from dalle2_pytorch.train_configs import DiffusionPriorNetworkConfig
+            import sys
+            from pathlib import Path
+            src_path = Path(__file__).parent.parent / "src"
+            if str(src_path) not in sys.path:
+                sys.path.insert(0, str(src_path))
             
-            # デフォルトのPrior設定
-            prior_config = DiffusionPriorNetworkConfig(
-                dim=self.clip_emb_dim,
+            from models import BrainDiffusionPrior, PriorNetwork
+            
+            # チェックポイントの形状から計算した正確な設定
+            # learned_query: [256, 1664] → num_tokens=256
+            # to_kv: [104, 1664] → dim_head=52 (104/2), heads=32 (1664/52)
+            # ff layer1: [13312, 1664] → ff_mult=4 (13312/1664/2=4, GLU使用)
+            # rel_pos_bias: [32, 32] → heads=32
+            net = PriorNetwork(
+                dim=self.clip_emb_dim,  # 1664
+                num_timesteps=100,
+                num_time_embeds=1,
+                num_tokens=256,
+                causal=True,
+                learned_query_mode='pos_emb',
                 depth=6,
-                dim_head=64,
-                heads=self.clip_emb_dim #64,
-                #causal=False,
-                #num_tokens=self.clip_seq_dim,
-                #learned_query_mode="none",
+                dim_head=52,
+                heads=32,
+                ff_mult=4,  # ← これが重要！8ではなく4
+                normformer=True,
+                attn_dropout=0.0,
+                ff_dropout=0.0,
+                final_proj=True,
+                rotary_emb=True,
             )
-            
+
             self.diffusion_prior = BrainDiffusionPrior(
-                net=prior_config.create(),
+                net=net,
                 image_embed_dim=self.clip_emb_dim,
                 condition_on_text_encodings=False,
                 timesteps=100,
                 cond_drop_prob=0.2,
                 image_embed_scale=None,
             )
-        except ImportError as e:
+            
+        except Exception as e:
             print(f"Warning: Could not initialize DiffusionPrior: {e}")
+            import traceback
+            traceback.print_exc()
             self.diffusion_prior = None
-    
     def forward(
         self,
         fmri: torch.Tensor,

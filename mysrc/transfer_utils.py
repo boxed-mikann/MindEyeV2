@@ -16,42 +16,35 @@ from typing import Optional, Dict, List, Tuple, Union
 
 import torch
 import torch.nn as nn
+import os
 
 
 # =============================================================================
 # チェックポイント操作
 # =============================================================================
 
-def load_checkpoint(ckpt_path: Union[str, Path]) -> Dict:
-    """
-    チェックポイントをロード
-    
-    Args:
-        ckpt_path: チェックポイントファイルまたはディレクトリのパス
-    
-    Returns:
-        チェックポイント辞書
-    """
-    ckpt_path = Path(ckpt_path)
-    
-    # ディレクトリの場合は last.pth を探す
-    if ckpt_path.is_dir():
-        candidates = ["last.pth", "best.pth", "model.pth"]
-        for candidate in candidates:
-            if (ckpt_path / candidate).exists():
-                ckpt_path = ckpt_path / candidate
+def load_checkpoint(ckpt_path):
+    """チェックポイントをロード（ディレクトリまたはファイル）"""
+    if os.path.isdir(ckpt_path):
+        # ディレクトリの場合は中のファイルを探す
+        candidates = ["last.pth", "model.pth", "checkpoint.pth", "best.pth"]
+        for name in candidates:
+            path = os.path.join(ckpt_path, name)
+            if os.path.exists(path):
+                ckpt_path = path
                 break
         else:
-            # .pth ファイルを検索
-            pth_files = list(ckpt_path.glob("*.pth"))
+            # .pthファイルを探す
+            pth_files = [f for f in os.listdir(ckpt_path) if f.endswith(".pth")]
             if pth_files:
-                ckpt_path = pth_files[0]
+                ckpt_path = os.path.join(ckpt_path, pth_files[0])
             else:
                 raise FileNotFoundError(f"No checkpoint found in {ckpt_path}")
-    
+
     print(f"Loading checkpoint from: {ckpt_path}")
-    checkpoint = torch.load(ckpt_path, map_location="cpu")
-    
+    # PyTorch 2.6+ requires weights_only=False for checkpoints with custom objects
+    checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+
     return checkpoint
 
 
@@ -134,7 +127,7 @@ def load_pretrained_without_ridge(
     Returns:
         (loaded_keys, missing_keys): ロードしたキーと見つからなかったキー
     """
-    # チェックポイントをロード
+    # チェックポイントをロード---
     checkpoint = load_checkpoint(ckpt_path)
     state_dict = get_state_dict_from_checkpoint(checkpoint)
     
